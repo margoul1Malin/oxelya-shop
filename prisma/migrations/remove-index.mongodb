@@ -1,0 +1,1 @@
+db.Order.dropIndex("Order_orderNumber_key"); 

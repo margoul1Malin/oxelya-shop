@@ -1,0 +1,256 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  email     String    @unique
+  password  String
+  name      String?
+  role      Role      @default(USER)
+  orders    Order[]
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  ratings   Rating[]
+  addresses Address[]
+  notifications Notification[]
+  legalAcceptances LegalAcceptance[]
+  invoices  Invoice[]
+}
+
+model Product {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String    @unique
+  description String
+  price       Float
+  image       String
+  categoryId  String    @db.ObjectId
+  category    Category  @relation(fields: [categoryId], references: [id])
+  isNew       Boolean   @default(false)
+  rating      Float?    @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  OrderItem   OrderItem[]
+  ratings     Rating[]
+  isCreated   Boolean @default(false)
+}
+
+model Order {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String        @db.ObjectId
+  user            User          @relation(fields: [userId], references: [id])
+  total           Float
+  status          OrderStatus   @default(PENDING)
+  paymentIntentId String?
+  paymentMethod   PaymentMethod // STRIPE, PAYPAL
+  paymentStatus   PaymentStatus @default(PENDING)
+  shippingAddress String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  items           OrderItem[]
+  notifications   Notification[]
+  legalAcceptances LegalAcceptance[]
+  invoices        Invoice[]
+}
+
+model OrderItem {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId   String   @db.ObjectId
+  productId String?  @db.ObjectId
+  quantity  Int
+  price     Float
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  subject   String
+  content   String
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  status    Status   @default(UNREAD)
+  isStarred Boolean  @default(false)
+  response  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Settings {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  siteName      String   @default("Margoul1 Store")
+  description   String?
+  contactEmail  String?
+  socialLinks   Json     @default("{}")
+  updatedAt     DateTime @updatedAt
+}
+
+model Rating {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  value     Int
+  userId    String   @db.ObjectId
+  productId String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+}
+
+model Address {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  street    String
+  city      String
+  state     String?
+  zipCode   String
+  country   String
+  phone     String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  icon        String?
+  gradient    String?
+  products    Product[]
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  title     String
+  message   String
+  type      String   @default("SYSTEM")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  orderId   String?  @db.ObjectId
+  order     Order?   @relation(fields: [orderId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model LegalAcceptance {
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String              @db.ObjectId
+  user              User                @relation(fields: [userId], references: [id])
+  documentType      LegalDocumentType
+  documentVersion   String              // Version du document accepté
+  ipAddress         String              // Adresse IP de l'utilisateur
+  userAgent         String              // User agent du navigateur
+  acceptedAt        DateTime            @default(now())
+  orderId           String?             @db.ObjectId // Commande associée si applicable
+  order             Order?              @relation(fields: [orderId], references: [id])
+  
+  // Pas de contrainte unique - on peut avoir plusieurs acceptations par utilisateur (conformité française)
+}
+
+model Invoice {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceNumber  String       @unique              // ex : "2025-0001"
+  orderId        String       @db.ObjectId
+  order          Order        @relation(fields: [orderId], references: [id])
+  userId         String       @db.ObjectId
+  user           User         @relation(fields: [userId], references: [id])
+  items          InvoiceItem[]
+  totalHT        Float
+  totalTTC       Float
+  tvaRate        Float        @default(0) // 0 pour auto-entrepreneur
+  createdAt      DateTime     @default(now())
+  dueDate        DateTime
+  paymentStatus  PaymentStatus @default(PENDING)
+  tvaNote        String?      // "TVA non applicable, art. 293 B du CGI"
+}
+
+model InvoiceItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceId   String   @db.ObjectId
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  label       String   // nom du produit ou service
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float    // quantity * unitPrice
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Status {
+  READ
+  UNREAD
+  REPLIED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  STRIPE
+  PAYPAL
+  CRYPTO
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model BruteforceAttempt {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  ip                String
+  userAgent         String
+  fingerprint       String
+  sessionId         String?
+  attempts          Int      @default(0)
+  isBlocked         Boolean  @default(false)
+  blockedUntil      DateTime?
+  lastAttempt       DateTime @default(now())
+  headers           Json     @default("{}")
+  browser           String?
+  os                String?
+  device            String?
+  language          String?
+  timezone          String?
+  screenSize        String?
+  colorDepth        Int?
+  pixelRatio        Float?
+  canvasFingerprint String?
+  webglFingerprint  String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([fingerprint])
+  @@index([ip])
+  @@index([isBlocked, blockedUntil])
+}
+
+enum LegalDocumentType {
+  CGV              // Conditions Générales de Vente
+  PRIVACY_POLICY   // Politique de Confidentialité
+  LEGAL_MENTIONS   // Mentions Légales
+  COOKIES_POLICY   // Politique de Cookies
+} 
