@@ -4,13 +4,18 @@ import { stripe } from '../../../../lib/stripe';
 import prisma from '../../../../lib/prisma';
 import Stripe from 'stripe';
 
+// Force dynamic rendering for webhook
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     console.log('=== WEBHOOK STRIPE REÇU ===');
     console.log('Headers:', Object.fromEntries(request.headers.entries()));
     console.log('URL:', request.url);
     
-    const body = await request.text();
+    // Lire le body comme buffer pour préserver l'intégrité
+    const body = await request.arrayBuffer();
+    const bodyText = new TextDecoder().decode(body);
     const signature = request.headers.get('stripe-signature')!;
     
     if (!signature) {
@@ -18,7 +23,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Signature manquante' }, { status: 400 });
     }
 
-    const event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
+    console.log('Body length:', bodyText.length);
+    console.log('Signature:', signature);
+    console.log('Webhook secret length:', process.env.STRIPE_WEBHOOK_SECRET?.length || 0);
+
+    const event = stripe.webhooks.constructEvent(bodyText, signature, process.env.STRIPE_WEBHOOK_SECRET!);
     console.log('Webhook reçu:', event.type);
 
     if (event.type === 'checkout.session.completed') {
@@ -35,7 +44,13 @@ export async function POST(request: Request) {
       // Récupérer la commande temporaire créée avant le paiement
       const tempOrder = await prisma.order.findUnique({
         where: { id: session.metadata.orderId },
-        include: { items: true }
+        include: { 
+          items: {
+            include: {
+              product: true
+            }
+          } 
+        }
       });
 
       if (!tempOrder) {
@@ -63,19 +78,61 @@ export async function POST(request: Request) {
 
       // Générer automatiquement la facture
       try {
-        const invoiceResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/invoices/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ orderId: updatedOrder.id }),
+        console.log('Génération de facture pour la commande:', updatedOrder.id);
+        
+        // Vérifier si une facture existe déjà
+        const existingInvoice = await prisma.invoice.findFirst({
+          where: { orderId: updatedOrder.id }
         });
 
-        if (invoiceResponse.ok) {
-          const invoiceData = await invoiceResponse.json();
-          console.log('Facture générée:', invoiceData.invoice.invoiceNumber);
+        if (existingInvoice) {
+          console.log('Facture déjà existante:', existingInvoice.invoiceNumber);
         } else {
-          console.error('Erreur lors de la génération de la facture');
+          // Générer le numéro de facture unique
+          const currentYear = new Date().getFullYear();
+          const lastInvoice = await prisma.invoice.findFirst({
+            where: {
+              invoiceNumber: {
+                startsWith: currentYear.toString()
+              }
+            },
+            orderBy: {
+              invoiceNumber: 'desc'
+            }
+          });
+
+          let invoiceNumber;
+          if (lastInvoice) {
+            const lastNumber = parseInt(lastInvoice.invoiceNumber.split('-')[1]);
+            invoiceNumber = `${currentYear}-${(lastNumber + 1).toString().padStart(4, '0')}`;
+          } else {
+            invoiceNumber = `${currentYear}-0001`;
+          }
+
+          // Créer la facture
+          const invoice = await prisma.invoice.create({
+            data: {
+              invoiceNumber,
+              orderId: updatedOrder.id,
+              userId: updatedOrder.userId,
+              totalHT: updatedOrder.total,
+              totalTTC: updatedOrder.total,
+              tvaRate: 0,
+              dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 jours
+              paymentStatus: 'COMPLETED',
+              tvaNote: 'TVA non applicable, art. 293 B du CGI',
+              items: {
+                create: updatedOrder.items.map(item => ({
+                  label: `Produit ${item.productId || 'non disponible'}`,
+                  quantity: item.quantity,
+                  unitPrice: item.price,
+                  totalPrice: item.price * item.quantity
+                }))
+              }
+            }
+          });
+
+          console.log('Facture générée:', invoice.invoiceNumber);
         }
       } catch (error) {
         console.error('Erreur lors de la génération de la facture:', error);

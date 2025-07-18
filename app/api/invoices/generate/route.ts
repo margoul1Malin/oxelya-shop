@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../lib/prisma';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
+    // Vérifier si c'est un appel interne (depuis le webhook)
+    const authHeader = request.headers.get('authorization');
+    const isInternalCall = authHeader === `Bearer ${process.env.INTERNAL_API_KEY || 'internal-key'}`;
+    
+    console.log('Génération de facture - Appel interne:', isInternalCall);
+    
     const { orderId } = await request.json();
 
     if (!orderId) {

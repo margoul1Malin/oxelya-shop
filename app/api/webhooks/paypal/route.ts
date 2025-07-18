@@ -4,6 +4,9 @@ import crypto from 'crypto';
 import prisma from '../../../../lib/prisma';
 import { createNotification } from '../../../../lib/notifications';
 
+// Force dynamic rendering for webhook
+export const dynamic = 'force-dynamic';
+
 const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID;
 
 // Fonction pour vérifier la signature PayPal
