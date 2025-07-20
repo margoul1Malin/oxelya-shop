@@ -18,11 +18,13 @@ import { toast } from 'react-hot-toast';
 interface Product {
   id: string;
   name: string;
+  description: string;
   price: number;
   image: string;
   rating: number | null;
   isNew: boolean;
   isCreated?: boolean;
+  isService?: boolean;
 }
 
 interface Category {
@@ -156,72 +158,122 @@ export default function CategoriesPage() {
                     {category.products.map((product) => (
                       <motion.div
                         key={product.id}
-                        whileHover={product.isCreated !== false ? { y: -5 } : {}}
-                        className={`bg-gray-800/50 rounded-xl p-4 border border-gray-700/30 transition-all duration-300 ${
+                        whileHover={product.isCreated !== false ? { y: -8, scale: 1.02 } : {}}
+                        className={`group relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 transition-all duration-500 ${
                           product.isCreated !== false 
-                            ? 'hover:border-blue-500/30' 
+                            ? 'hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/20' 
                             : 'opacity-75'
+                        } ${
+                          product.isService 
+                            ? 'hover:border-green-500/50 hover:shadow-green-500/20' 
+                            : ''
                         }`}
                       >
-                        <div className="aspect-square mb-4 relative overflow-hidden rounded-lg">
+                        {/* Badge Service sur devis */}
+                        {product.isService && (
+                          <div className="absolute -top-2 -right-2 z-10">
+                            <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
+                              Service sur devis
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="aspect-square mb-4 relative overflow-hidden rounded-xl bg-gray-900">
                           <img
                             src={product.image}
                             alt={product.name}
-                            className={`w-full h-full object-cover transition-transform duration-300 ${
+                            className={`w-full h-full object-cover transition-all duration-500 ${
                               product.isCreated !== false 
-                                ? 'hover:scale-110' 
+                                ? 'group-hover:scale-110 group-hover:rotate-1' 
                                 : 'grayscale'
                             }`}
                           />
                           
+                          {/* Overlay gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          
                           {/* Badge Coming Soon pour les produits non créés */}
                           {product.isCreated === false && (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                              <div className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-                                <Sparkles className="w-3 h-3" />
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                              <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg">
+                                <Sparkles className="w-4 h-4" />
                                 Coming Soon
                               </div>
                             </div>
                           )}
                           
-                          {product.isNew && product.isCreated !== false && (
-                            <div className="absolute top-2 right-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs px-2 py-1 rounded-full">
+                          {/* Badge Nouveau */}
+                          {product.isNew && product.isCreated !== false && !product.isService && (
+                            <div className="absolute top-3 left-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs px-3 py-1 rounded-full shadow-lg font-semibold">
                               Nouveau
                             </div>
                           )}
                         </div>
                         
-                        <h3 className={`font-medium mb-2 truncate ${
-                          product.isCreated !== false ? 'text-white' : 'text-gray-300'
-                        }`}>
-                          {product.name}
-                        </h3>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className={`font-bold ${
-                            product.isCreated !== false ? 'text-blue-400' : 'text-gray-500'
+                        <div className="space-y-3">
+                          <h3 className={`font-semibold text-lg line-clamp-2 ${
+                            product.isCreated !== false ? 'text-white' : 'text-gray-300'
                           }`}>
-                            {product.isCreated !== false ? `${product.price.toFixed(2)} €` : 'Prix à venir'}
-                          </span>
-                          {product.rating && product.isCreated !== false && (
-                            <div className="flex items-center gap-1">
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                              <span className="text-gray-300 text-sm">
-                                {product.rating}
+                            {product.name}
+                          </h3>
+                          
+                                                     <div className="text-gray-400 text-sm line-clamp-2 whitespace-pre-wrap">
+                             {product.description}
+                           </div>
+                          
+                          <div className="flex items-center justify-between pt-2">
+                            <div className="flex flex-col">
+                              <span className={`text-xl font-bold ${
+                                product.isService 
+                                  ? 'text-green-400' 
+                                  : product.isCreated !== false 
+                                    ? 'text-blue-400' 
+                                    : 'text-gray-500'
+                              }`}>
+                                {product.isService 
+                                  ? 'Sur devis' 
+                                  : product.isCreated !== false 
+                                    ? `${product.price.toFixed(2)} €` 
+                                    : 'Prix à venir'
+                                }
                               </span>
+                              {product.isService && (
+                                <span className="text-xs text-green-300">
+                                  Contactez-nous
+                                </span>
+                              )}
                             </div>
-                          )}
+                            
+                            {product.rating && product.isCreated !== false && !product.isService && (
+                              <div className="flex items-center gap-1 bg-gray-800/50 px-2 py-1 rounded-full">
+                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                <span className="text-gray-300 text-sm font-medium">
+                                  {product.rating}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
+                        {/* Bouton d'action */}
                         {product.isCreated !== false ? (
-                          <Link
-                            href={`/produits/${product.id}`}
-                            className="block w-full mt-3 px-4 py-2 bg-gray-700/50 hover:bg-blue-500 text-center text-white rounded-lg transition-all duration-300"
-                          >
-                            Voir le produit
-                          </Link>
+                          product.isService ? (
+                            <button
+                              onClick={() => window.open('https://www.oxelya.com', '_blank')}
+                              className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-green-500/25"
+                            >
+                              En savoir plus
+                            </button>
+                          ) : (
+                            <Link
+                              href={`/produits/${product.id}`}
+                              className="block w-full mt-4 px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-500/25"
+                            >
+                              Voir le produit
+                            </Link>
+                          )
                         ) : (
-                          <div className="block w-full mt-3 px-4 py-2 bg-gray-600 text-center text-gray-400 rounded-lg cursor-not-allowed">
+                          <div className="w-full mt-4 px-4 py-3 bg-gray-700 text-gray-400 font-semibold rounded-xl cursor-not-allowed">
                             Bientôt disponible
                           </div>
                         )}

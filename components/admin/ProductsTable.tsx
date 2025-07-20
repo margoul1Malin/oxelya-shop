@@ -90,9 +90,15 @@ export default function ProductsTable({ products, onProductUpdate }: ProductsTab
                 </span>
               </td>
               <td className="p-4">
-                <span className="text-green-400 font-medium">
-                  {product.price.toFixed(2)} €
-                </span>
+                {product.isService ? (
+                  <span className="text-green-400 font-medium">
+                    Sur devis
+                  </span>
+                ) : (
+                  <span className="text-green-400 font-medium">
+                    {product.price.toFixed(2)} €
+                  </span>
+                )}
               </td>
               <td className="p-4">
                 {(product.isCreated ?? true) ? (

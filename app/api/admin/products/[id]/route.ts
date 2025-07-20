@@ -23,6 +23,7 @@ export async function PUT(
     const categoryId = formData.get('categoryId') as string;
     const image = formData.get('image') as string;
     const isNew = formData.get('isNew') === 'true';
+    const isService = formData.get('isService') === 'true';
 
     const updatedProduct = await prisma.product.update({
       where: {
@@ -34,7 +35,8 @@ export async function PUT(
         price,
         categoryId,
         image,
-        isNew
+        isNew,
+        isService
       }
     });
 

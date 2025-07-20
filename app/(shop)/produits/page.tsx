@@ -26,6 +26,7 @@ interface Product {
   image: string;
   rating: number | null;
   isCreated?: boolean;
+  isService?: boolean;
   category: {
     name: string;
   };

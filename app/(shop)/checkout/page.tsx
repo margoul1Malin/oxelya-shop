@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useCart } from '../../../hooks/useCart';
 import { useAuth } from '../../../hooks/useAuth';
+import { useSession } from 'next-auth/react';
 import AddressForm from '../../../components/checkout/AddressForm';
-import { Shield, Truck, CreditCard, Clock, AlertCircle, CheckCircle } from 'lucide-react';
+import { Shield, Truck, CreditCard, Clock, AlertCircle, CheckCircle, LogIn } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 export default function CheckoutPage() {
@@ -14,6 +15,7 @@ export default function CheckoutPage() {
   const cart = state.items;
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const { user } = useAuth();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [shippingAddress, setShippingAddress] = useState('');
@@ -24,6 +26,50 @@ export default function CheckoutPage() {
       router.push('/panier');
     }
   }, [cart, router]);
+
+  // Vérification de l'authentification
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white pt-20">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Vérification de votre compte...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white pt-20">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <LogIn className="w-16 h-16 text-blue-500 mx-auto mb-6" />
+            <h1 className="text-3xl font-bold mb-4">Connexion requise</h1>
+            <p className="text-gray-400 mb-6">
+              Vous devez vous connecter ou créer un compte pour finaliser votre commande.
+            </p>
+            <div className="space-x-4">
+              <button
+                onClick={() => router.push('/login?callbackUrl=' + encodeURIComponent('/checkout'))}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+              >
+                Se connecter
+              </button>
+              <button
+                onClick={() => router.push('/register?callbackUrl=' + encodeURIComponent('/checkout'))}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors"
+              >
+                Créer un compte
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleStripeCheckout = async () => {
     if (!acceptedTerms) {

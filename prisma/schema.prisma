@@ -39,6 +39,7 @@ model Product {
   OrderItem   OrderItem[]
   ratings     Rating[]
   isCreated   Boolean @default(false)
+  isService   Boolean   @default(false)
 }
 
 model Order {

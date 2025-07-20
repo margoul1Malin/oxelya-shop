@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Clock } from 'lucide-react';
+import { ShoppingCart, Clock, ExternalLink } from 'lucide-react';
 import { useCart } from '../../hooks/useCart';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
@@ -17,6 +17,7 @@ interface Product {
   isNew?: boolean;
   isCreated?: boolean;
   rating: number | null;
+  isService?: boolean;
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -32,6 +33,12 @@ export default function ProductCard({ product }: { product: Product }) {
     // Ne pas permettre d'ajouter au panier si le produit n'est pas créé
     if (!isProductCreated) {
       toast.error('Ce produit arrive bientôt !');
+      return;
+    }
+    
+    // Ne pas permettre d'ajouter au panier si c'est un service
+    if (product.isService) {
+      window.open('https://www.oxelya.com', '_blank');
       return;
     }
     
@@ -111,13 +118,29 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
         
         <div className="flex items-center justify-between mt-auto pt-2">
-          <span className={`text-xl font-bold 
-            ${isProductCreated ? 'text-blue-500' : 'text-gray-500'}
-          `}>
-            {isProductCreated ? `${product.price.toFixed(2)} €` : 'Prix à venir'}
-          </span>
+          {product.isService ? (
+            <span className="text-xl font-bold text-green-500">
+              Sur devis
+            </span>
+          ) : (
+            <span className={`text-xl font-bold 
+              ${isProductCreated ? 'text-blue-500' : 'text-gray-500'}
+            `}>
+              {isProductCreated ? `${product.price.toFixed(2)} €` : 'Prix à venir'}
+            </span>
+          )}
           
-          {isProductCreated ? (
+          {product.isService ? (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleAddToCart}
+              className="p-2 bg-green-500 rounded-lg text-white hover:bg-green-600 transition-colors flex-shrink-0"
+              disabled={isAdding}
+            >
+              <ExternalLink className="w-5 h-5" />
+            </motion.button>
+          ) : isProductCreated ? (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

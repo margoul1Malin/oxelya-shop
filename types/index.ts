@@ -18,6 +18,7 @@ export interface BaseProduct {
   categoryId: string;
   isNew: boolean;
   isCreated: boolean;
+  isService: boolean;
   rating: number | null;
   createdAt: string;
   category?: {

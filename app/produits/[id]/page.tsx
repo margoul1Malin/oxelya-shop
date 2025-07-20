@@ -17,6 +17,7 @@ interface Product {
   price: number;
   image: string;
   stock: number;
+  isService?: boolean;
 }
 
 export default function ProductPage({ params }: { params: { id: string } }) {
@@ -49,13 +50,13 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   }, [params.id]);
 
   const handleAddToCart = async () => {
-    if (!session) {
-      toast.error('Veuillez vous connecter pour ajouter au panier');
-      router.push('/login');
+    if (!product) return;
+
+    // Si c'est un service, rediriger vers Oxelya
+    if (product.isService) {
+      window.open('https://www.oxelya.com', '_blank');
       return;
     }
-
-    if (!product) return;
 
     setIsLoading(true);
     try {
@@ -71,6 +72,13 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       });
       
       toast.success('Produit ajouté au panier');
+      
+      // Si l'utilisateur n'est pas connecté, afficher un message informatif
+      if (!session) {
+        toast.success('Vous devrez vous connecter pour finaliser votre commande', {
+          duration: 4000
+        });
+      }
     } catch (error) {
       console.error('Erreur ajout au panier:', error);
       toast.error('Erreur lors de l\'ajout au panier');
@@ -126,50 +134,66 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               <h1 className="text-3xl font-bold text-white">
                 {product.name}
               </h1>
-              <span className="text-2xl font-bold text-blue-500">
-                {product.price.toFixed(2)} €
+              <span className={`text-2xl font-bold ${
+                product.isService ? 'text-green-500' : 'text-blue-500'
+              }`}>
+                {product.isService ? 'Sur devis' : `${product.price.toFixed(2)} €`}
               </span>
             </div>
 
-            <p className="text-gray-400 mb-8">
+            <div className="text-gray-400 mb-8 whitespace-pre-wrap leading-relaxed">
               {product.description}
-            </p>
+            </div>
 
             <div className="flex items-center gap-4 mt-6">
-              <div className="flex items-center bg-gray-800 rounded-lg">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-                >
-                  -
-                </button>
-                <span className="px-4 text-white">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-                >
-                  +
-                </button>
-              </div>
+              {!product.isService && (
+                <div className="flex items-center bg-gray-800 rounded-lg">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    -
+                  </button>
+                  <span className="px-4 text-white">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
 
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleAddToCart}
                 disabled={isLoading}
-                className={`flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 
-                  hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200
+                className={`flex items-center gap-2 px-6 py-2.5 text-white rounded-lg transition-all duration-200
+                  ${product.isService 
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700' 
+                    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
+                  }
                   ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
               >
                 {isLoading ? (
                   <>
                     <Loader className="w-5 h-5 animate-spin" />
-                    Ajout en cours...
+                    {product.isService ? 'Redirection...' : 'Ajout en cours...'}
                   </>
                 ) : (
                   <>
-                    <ShoppingCart className="w-5 h-5" />
-                    Ajouter au panier
+                    {product.isService ? (
+                      <>
+                        <ShoppingCart className="w-5 h-5" />
+                        En savoir plus
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-5 h-5" />
+                        Ajouter au panier
+                      </>
+                    )}
                   </>
                 )}
               </motion.button>

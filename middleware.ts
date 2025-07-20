@@ -24,17 +24,17 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Protection des routes utilisateur
+    // Protection des routes utilisateur (profil)
     if (request.nextUrl.pathname.startsWith('/profil')) {
       if (!token) {
         return NextResponse.redirect(new URL('/login', request.url));
       }
     }
 
-    // Protection des routes checkout
+    // Protection des routes checkout - redirection vers login si non connecté
     if (request.nextUrl.pathname.startsWith('/checkout')) {
       if (!token) {
-        return NextResponse.redirect(new URL('/login', request.url));
+        return NextResponse.redirect(new URL('/login?callbackUrl=' + encodeURIComponent(request.nextUrl.pathname), request.url));
       }
     }
 

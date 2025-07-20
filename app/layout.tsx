@@ -2,6 +2,7 @@ import { Metadata, Viewport } from 'next';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { CartProvider } from '../components/cart/CartProvider';
+import { CartClearListener } from '../components/cart/CartClearListener';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import { Inter } from 'next/font/google'
@@ -64,6 +65,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <CartProvider>
+            <CartClearListener />
             <Navbar />
             <div className="min-h-screen pt-16">
               {children}

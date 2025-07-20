@@ -11,6 +11,7 @@ interface Product {
   image: string;
   isNew: boolean;
   isCreated?: boolean;
+  isService?: boolean;
   rating: number | null;
 }
 

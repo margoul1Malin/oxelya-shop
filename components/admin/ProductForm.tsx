@@ -25,7 +25,8 @@ export default function ProductForm({ product, onClose, onSuccess }: ProductForm
     price: product?.price || '',
     categoryId: product?.categoryId || '',
     image: product?.image || '',
-    isCreated: product?.isCreated ?? true
+    isCreated: product?.isCreated ?? true,
+    isService: product?.isService ?? false
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -225,6 +226,26 @@ export default function ProductForm({ product, onClose, onSuccess }: ProductForm
                   {formData.isCreated 
                     ? "Le produit est disponible à l'achat" 
                     : "Le produit sera affiché comme 'Coming Soon...' et ne sera pas achetable"
+                  }
+                </p>
+              </div>
+            </label>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.isService}
+                onChange={(e) => setFormData({ ...formData, isService: e.target.checked })}
+                className="w-4 h-4 text-green-500 bg-gray-700 border-gray-600 rounded focus:ring-green-500 focus:ring-2"
+              />
+              <div>
+                <span className="text-gray-300 font-medium">Service sur devis</span>
+                <p className="text-sm text-gray-400">
+                  {formData.isService 
+                    ? "Ce produit sera affiché comme un service sur devis et redirigera vers Oxelya" 
+                    : "Produit normal avec prix fixe"
                   }
                 </p>
               </div>

@@ -25,7 +25,7 @@ export default function Footer() {
           <div>
             <h3 className="text-xl font-bold mb-4">Contact</h3>
             <ul className="text-gray-400 space-y-2">
-              <li><Link href="mailto:contact@margoul1.dev" className="text-gray-400 hover:text-white"><FiMail className="inline-block mr-2" />contact@margoul1.dev</Link></li>
+              <li><Link href="mailto:contact@oxelya.com" className="text-gray-400 hover:text-white"><FiMail className="inline-block mr-2" />contact@oxelya.com</Link></li>
               <li><Link href="/contact" className="text-gray-400 hover:text-white"><FiPaperclip className="inline-block mr-2" />Contact</Link></li>
               <li><Link href="/support" className="text-gray-400 hover:text-white"><FiUser className="inline-block mr-2" />Support</Link></li>
             </ul>
@@ -37,7 +37,7 @@ export default function Footer() {
           <Link href="/politique-de-confidentialite" className="text-gray-400 hover:text-white text-center">Politique de confidentialité</Link>
           <Link href="/conditions-generales-de-vente" className="text-gray-400 hover:text-white text-center">Conditions générales de vente</Link> 
           </div>
-          <p className="text-gray-400">© 2024 Oxelya Shop. Tous droits réservés.</p>
+          <p className="text-gray-400">© 2025 Oxelya Shop. Tous droits réservés.</p>
         </div>
       </div>
     </footer>

@@ -84,7 +84,8 @@ export async function POST(request: Request) {
         image: data.image,
         categoryId: data.categoryId,
         isNew: true,
-        isCreated: data.isCreated ?? true
+        isCreated: data.isCreated ?? true,
+        isService: data.isService ?? false
       }
     });
 
@@ -149,7 +150,8 @@ export async function PUT(request: Request) {
         price: parseFloat(data.price),
         image: data.image,
         categoryId: data.categoryId,
-        isCreated: data.isCreated ?? true
+        isCreated: data.isCreated ?? true,
+        isService: data.isService ?? false
       }
     });
 

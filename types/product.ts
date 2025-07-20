@@ -11,6 +11,7 @@ export interface Product {
   rating: number | null;
   isNew?: boolean;
   isCreated?: boolean;
+  isService?: boolean;
 }
 
 export interface Category {

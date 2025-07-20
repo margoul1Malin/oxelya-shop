@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import crypto from 'crypto';
 import prisma from '../../../../lib/prisma';
 import { createNotification } from '../../../../lib/notifications';
 

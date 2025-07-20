@@ -19,12 +19,6 @@ export default function ContactForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!session) {
-      toast.error('Vous devez être connecté pour envoyer un message');
-      router.push('/login');
-      return;
-    }
-
     if (!formData.subject.trim() || !formData.content.trim()) {
       toast.error('Veuillez remplir tous les champs');
       return;
@@ -47,6 +41,13 @@ export default function ContactForm() {
 
       toast.success('Message envoyé avec succès');
       setFormData({ subject: '', content: '' });
+      
+      // Si l'utilisateur n'est pas connecté, afficher un message informatif
+      if (!session) {
+        toast.success('Vous devrez vous connecter pour recevoir une réponse', {
+          duration: 4000
+        });
+      }
     } catch (error: any) {
       console.error('Erreur:', error);
       toast.error(error.message || 'Une erreur est survenue');
@@ -113,7 +114,7 @@ export default function ContactForm() {
         <div className="flex justify-end pt-4">
           <motion.button
             type="submit"
-            disabled={loading || !session}
+            disabled={loading}
             className="group relative px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 font-medium transition-all duration-300 hover:scale-105 shadow-lg"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -138,13 +139,13 @@ export default function ContactForm() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center"
+            className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-center"
           >
-            <p className="text-red-400 text-sm">
-              Vous devez être connecté pour envoyer un message.{' '}
+            <p className="text-blue-400 text-sm">
+              Vous n'êtes pas connecté. Vous pouvez envoyer un message, mais vous devrez vous connecter pour recevoir une réponse.{' '}
               <button
                 onClick={() => router.push('/login')}
-                className="text-blue-400 hover:text-blue-300 underline font-medium transition-colors"
+                className="text-blue-300 hover:text-blue-200 underline font-medium transition-colors"
               >
                 Se connecter
               </button>

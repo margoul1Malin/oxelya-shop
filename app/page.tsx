@@ -20,6 +20,7 @@ async function getLatestProducts() {
       categoryId: true,
       isNew: true,
       isCreated: true,
+      isService: true,
       rating: true,
       createdAt: true,
       category: {

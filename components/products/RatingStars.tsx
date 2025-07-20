@@ -18,7 +18,7 @@ export default function RatingStars({ productId, initialRating = 0, onRatingChan
 
   const handleRating = async (rating: number) => {
     if (!isAuthenticated) {
-      alert('Vous devez être connecté pour noter un produit');
+      alert('Vous devez être connecté pour noter un produit. Votre note sera enregistrée après connexion.');
       return;
     }
 

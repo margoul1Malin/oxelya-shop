@@ -1,4 +1,3 @@
-import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { stripe } from '../../../../lib/stripe';
 import prisma from '../../../../lib/prisma';
@@ -187,6 +186,19 @@ export async function POST(request: Request) {
         }
       });
       console.log('Notification créée pour:', session.metadata.userId);
+
+      // Vider le panier de l'utilisateur en supprimant les données du localStorage côté client
+      // On va créer une notification spéciale pour déclencher le vidage
+      await prisma.notification.create({
+        data: {
+          userId: session.metadata.userId,
+          type: 'CART_CLEAR',
+          title: 'Panier vidé',
+          message: 'Votre panier a été vidé suite à votre commande.',
+          orderId: updatedOrder.id
+        }
+      });
+      console.log('Notification de vidage de panier créée pour:', session.metadata.userId);
 
     } else if (event.type === 'checkout.session.expired') {
       const session = event.data.object as Stripe.Checkout.Session;
